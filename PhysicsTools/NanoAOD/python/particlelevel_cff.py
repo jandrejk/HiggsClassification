@@ -39,6 +39,20 @@ particleLevel = cms.EDProducer("ParticleLevelProducer",
     fatJetMaxEta   = cms.double(999.),
 )
 
+rivetProducerHTXS = cms.EDProducer('HTXSRivetProducer',
+  HepMCCollection = cms.InputTag('myGenerator','unsmeared'),
+  LHERunInfo = cms.InputTag('externalLHEProducer'),
+  #ProductionMode = cms.string('GGF'),
+  ProductionMode = cms.string('AUTO'),
+)
+
+myGenerator = cms.EDProducer("GenParticles2HepMCConverter",
+   genParticles = cms.InputTag("mergedGenParticles"),
+   genEventInfo = cms.InputTag("generator"),
+   signalParticlePdgIds = cms.vint32(25), ## for the Higgs analysis
+)
+
+
 
 
 ##################### Tables for final output and docs ##########################
@@ -109,3 +123,4 @@ rivetMetTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
 
 particleLevelSequence = cms.Sequence(mergedGenParticles + genParticles2HepMC + particleLevel)
 particleLevelTables = cms.Sequence(rivetLeptonTable + rivetMetTable)
+globalrivetProducerHTXS = cms.Sequence(mergedGenParticles + myGenerator + rivetProducerHTXS)

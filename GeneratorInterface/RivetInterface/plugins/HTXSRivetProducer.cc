@@ -6,7 +6,14 @@
  *
  */
 
+/* 1st change: get rid of stream
+ * 6th change: insert of one
+ * 10th change: back to stream  
+   20th change: back to one
 #include "FWCore/Framework/interface/stream/EDProducer.h"
+*/
+#include "FWCore/Framework/interface/one/EDProducer.h"
+
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Framework/interface/Run.h"
@@ -28,7 +35,13 @@ using namespace Rivet;
 using namespace edm;
 using namespace std;
 
+/* 7th change: one::Producer
+   8th change: EDProducer
+   11th chnage: back to stream	
+   21st change: back to one and add WatchRuns
 class HTXSRivetProducer : public edm::stream::EDProducer<> {
+*/
+class HTXSRivetProducer : public edm::one::EDProducer<edm::one::WatchRuns> {
 public:
     
     explicit HTXSRivetProducer(const edm::ParameterSet& cfg) : 
@@ -41,17 +54,40 @@ public:
         _prodMode = cfg.getParameter<string>("ProductionMode");
         m_HiggsProdMode = HTXS::UNKNOWN;
         
+	/* 2nd change: produces gets renamed to produce
+ *         9th change: undo changes and call it produces
+        produces<HTXS::HiggsClassification>("HiggsClassification").setBranchAlias("HiggsClassification");
+	*/
         produces<HTXS::HiggsClassification>("HiggsClassification").setBranchAlias("HiggsClassification");
 
     }
+    /* 3rd change: delete override
     ~HTXSRivetProducer() override;
+    */
+    ~HTXSRivetProducer();
     
 private:
-    
+   
+    /* 12th change: delete and add new void
+ *     22nd change: comment out 
     void beginJob();
+    */
+    //void beginStream(edm::StreamID) override;
+    /* 4th change: delete override
     void produce( edm::Event&, const edm::EventSetup&) override;
-    void endJob();
-    
+    */
+    void produce( edm::Event&, const edm::EventSetup&);
+    /* 13th change: delete end Job and add new void
+       23rd change: comment out
+ *  void endJob();
+    */
+    //void endStream() override;
+   
+    /* 5th change: delete override 2x  
+       24th change: put override back
+    void beginRun(edm::Run const& iRun, edm::EventSetup const& es) override;
+    void beginRun(edm::Run const& iRun, edm::EventSetup const& es) override;
+    */    
     void beginRun(edm::Run const& iRun, edm::EventSetup const& es) override;
     void endRun(edm::Run const& iRun, edm::EventSetup const& es) override;
     
@@ -71,10 +107,14 @@ private:
 
 HTXSRivetProducer::~HTXSRivetProducer(){
 }
-
+/* 15th change: replace beginJob by beginStream and comment out _analysisHandler
+   25th change: comment out all function 
 void HTXSRivetProducer::beginJob(){
     _analysisHandler.addAnalysis(_HTXS);
-}
+*/
+//void HTXSRivetProducer::beginStream(edm::StreamID){
+    //_analysisHandler.addAnalysis(_HTXS);
+//}
 
 void HTXSRivetProducer::produce( edm::Event & iEvent, const edm::EventSetup & ) {
     
@@ -129,8 +169,10 @@ void HTXSRivetProducer::produce( edm::Event & iEvent, const edm::EventSetup & ) 
       
 
       if (_isFirstEvent){
-
-          // set the production mode if not done already
+	  /* 16th change add analysisHandler see change 15 */
+    	  _analysisHandler.addAnalysis(_HTXS);
+          
+	  // set the production mode if not done already
           if      ( _prodMode == "GGF"   ) m_HiggsProdMode = HTXS::GGF;
           else if ( _prodMode == "VBF"   ) m_HiggsProdMode = HTXS::VBF;
           else if ( _prodMode == "WH"    ) m_HiggsProdMode = HTXS::WH;
@@ -150,7 +192,10 @@ void HTXSRivetProducer::produce( edm::Event & iEvent, const edm::EventSetup & ) 
 
           // at this point the production mode must be known
           if (m_HiggsProdMode == HTXS::UNKNOWN) {
-              edm::LogInfo   ("HTXSRivetProducer")  << "HTXSRivetProducer WARNING: HiggsProduction mode is UNKNOWN" << endl;
+              /* 18th chnange: delete empty spaces
+ * 	      edm::LogInfo   ("HTXSRivetProducer")  << "HTXSRivetProducer WARNING: HiggsProduction mode is UNKNOWN" << endl;
+              */
+	      edm::LogInfo ("HTXSRivetProducer") << "HTXSRivetProducer WARNING: HiggsProduction mode is UNKNOWN" << endl;
           }            
 
           // initialize rivet analysis
@@ -164,17 +209,30 @@ void HTXSRivetProducer::produce( edm::Event & iEvent, const edm::EventSetup & ) 
       cat_ = HTXS::Rivet2Root(rivet_cat);
 
       unique_ptr<HTXS::HiggsClassification> cat( new HTXS::HiggsClassification( cat_ ) ); 
-
+      std::cout << (int) cat_.stage1_cat_pTjet30GeV << endl;
+      std::cout << typeid(cat).name() << '\n';
+      std::cout << typeid(cat_).name() << '\n';
+      std::cout << typeid(cat_.stage1_cat_pTjet30GeV).name() << '\n';
       iEvent.put(std::move(cat),"HiggsClassification");
-    }
+      //int categoryHiggs = (int) cat_.stage1_cat_pTjet30GeV;
+      //iEvent.put(categoryHiggs, "HiggsClassification");
+      
+      //std::cout << iEvent << endl;
+     }
 }
 
-void HTXSRivetProducer::endJob(){
-    _HTXS->printClassificationSummary();
-}
+/* 19th change: endJob to EndStream
+   26th change: uncomment void function	
+ * void HTXSRivetProducer::endJob(){ 
+ */
+//void HTXSRivetProducer::endStream(){
+//    _HTXS->printClassificationSummary();
+//}
 
 void HTXSRivetProducer::endRun(edm::Run const& iRun, edm::EventSetup const& es) 
 {
+    // 27th change: added line below from change 26
+    _HTXS->printClassificationSummary();
 }
 
 void HTXSRivetProducer::beginRun(edm::Run const& iRun, edm::EventSetup const& es) {
