@@ -209,16 +209,20 @@ void HTXSRivetProducer::produce( edm::Event & iEvent, const edm::EventSetup & ) 
       cat_ = HTXS::Rivet2Root(rivet_cat);
 
       unique_ptr<HTXS::HiggsClassification> cat( new HTXS::HiggsClassification( cat_ ) ); 
-      std::cout << (int) cat_.stage1_cat_pTjet30GeV << endl;
-      std::cout << typeid(cat).name() << '\n';
-      std::cout << typeid(cat_).name() << '\n';
-      std::cout << typeid(cat_.stage1_cat_pTjet30GeV).name() << '\n';
+      std::cout << "Higgs category before moving it to the event" << (int) cat_.stage1_cat_pTjet30GeV << endl;
+      //std::cout << typeid(cat).name() << '\n';
+      //std::cout << typeid(cat_).name() << '\n';
+      //std::cout << typeid(cat_.stage1_cat_pTjet30GeV).name() << '\n';
       iEvent.put(std::move(cat),"HiggsClassification");
       //int categoryHiggs = (int) cat_.stage1_cat_pTjet30GeV;
       //iEvent.put(categoryHiggs, "HiggsClassification");
       
       //std::cout << iEvent << endl;
      }
+     edm::Handle<HTXS::HiggsClassification> clptr;
+     iEvent.getByLabel("HiggsClassification",clptr);
+     std::cout << "Higgs Category is pointing " << &clptr << "\n";    
+     std::cout << "Higgs Category is " << clptr << "\n";    
 }
 
 /* 19th change: endJob to EndStream
